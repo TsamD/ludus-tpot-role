@@ -1,4 +1,0 @@
----
-- name: Placeholder HIV Sensor installation
-  debug:
-    msg: "HIV sensor (esensor) role running correctly."
