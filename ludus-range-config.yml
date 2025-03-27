@@ -1,17 +1,22 @@
 ludus:
-  - vm_name: "{{ range_id }}-tpot-server"
-    hostname: "{{ range_id }}-tpot-server"
-    template: debian-11-x64-server-template
+  - vm_name: "{{ range_id }}-tpot"
+    hostname: "{{ range_id }}-tpot"
+    template: ubuntu-24.04-x64-server-template
     vlan: 100
-    ip_last_octet: 50
+    ip_last_octet: 10
     ram_gb: 8
     cpus: 4
     linux: true
-    testing:
-      snapshot: false
-      block_internet: false
     roles:
       - yudus.ludus_tpot_server
-    role_vars:
-      deploy_mode: server
 
+  - vm_name: "{{ range_id }}-esensor"
+    hostname: "{{ range_id }}-esensor"
+    template: ubuntu-24.04-x64-server-template
+    vlan: 100
+    ip_last_octet: 11
+    ram_gb: 4
+    cpus: 2
+    linux: true
+    roles:
+      - yudus.ludus_hiv_sensor
