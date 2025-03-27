@@ -1,0 +1,17 @@
+ludus:
+  - vm_name: "{{ range_id }}-tpot-server"
+    hostname: "{{ range_id }}-tpot-server"
+    template: debian-11-x64-server-template
+    vlan: 100
+    ip_last_octet: 50
+    ram_gb: 8
+    cpus: 4
+    linux: true
+    testing:
+      snapshot: false
+      block_internet: false
+    roles:
+      - yudus.ludus_tpot_server
+    role_vars:
+      deploy_mode: server
+

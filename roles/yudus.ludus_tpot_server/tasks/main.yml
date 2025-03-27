@@ -1,0 +1,38 @@
+---
+- name: Install required packages
+  apt:
+    name:
+      - git
+      - docker.io
+      - docker-compose
+      - python3-pip
+      - ansible
+    state: present
+    update_cache: yes
+
+- name: Add current user to docker group
+  user:
+    name: "{{ ansible_user_id }}"
+    groups: docker
+    append: yes
+
+- name: Clone T-Pot repository
+  git:
+    repo: "https://github.com/telekom-security/tpotce.git"
+    dest: /opt/tpotce
+    version: master
+
+- name: Create inventory file for local deployment
+  copy:
+    dest: /opt/tpotce/installer/install/inventory.yml
+    content: |
+      all:
+        hosts:
+          localhost:
+            ansible_connection: local
+
+- name: Run T-Pot deployment
+  command: ansible-playbook deploy.yml -i inventory.yml
+  args:
+    chdir: /opt/tpotce/installer/install
+
