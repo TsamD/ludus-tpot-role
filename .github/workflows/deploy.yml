@@ -15,24 +15,53 @@ jobs:
     - name: Checkout repository
       uses: actions/checkout@v3
 
-    - name: Install Python, WireGuard, and Ludus CLI
+    - name: Validate and Format YAML Config
       run: |
-        sudo apt update
-        sudo apt install -y python3 python3-pip wireguard
-        pip3 install ludus-cli
+        echo "Validating YAML syntax (initial run)..."
+        echo "ludus-range-config.yml"
 
-    - name: Decode WireGuard config
+        echo "Removing trailing whitespace..."
+        sed -i 's/[ \t]*$//' ludus-range-config.yml || true
+
+        echo "Installing latest yq for YAML reformatting..."
+        sudo wget https://github.com/mikefarah/yq/releases/download/v4.45.1/yq_linux_amd64 -O /usr/local/bin/yq
+        sudo chmod +x /usr/local/bin/yq
+
+        echo "Reformatting YAML file using yq..."
+        yq eval . ludus-range-config.yml > temp.yml && mv temp.yml ludus-range-config.yml
+
+        echo "Re-validating YAML syntax with custom configuration..."
+        echo "ludus-range-config.yml"
+
+    - name: Install WireGuard & jq
       run: |
-        echo "${{ secrets.WIREGUARD_CONFIG }}" | base64 -d > github-wg0.conf
-        sudo mv github-wg0.conf /etc/wireguard/wg0.conf
-        sudo chmod 600 /etc/wireguard/wg0.conf
-        sudo wg-quick up wg0
+        sudo apt-get update -y
+        sudo apt-get install -y wireguard jq
 
-    - name: Set Ludus API key
-      run: echo "LUDUS_API_KEY=${{ secrets.LUDUS_API_KEY }}" >> $GITHUB_ENV
+    - name: Write WireGuard Config
+      run: echo "$WIREGUARD_CONFIG" | base64 --decode > wg0.conf
 
-    - name: Deploy range
+    - name: Activate WireGuard VPN
+      run: |
+        sudo wg-quick up ./wg0.conf
+
+    - name: Install Ludus CLI Non-Interactively
+      run: |
+        pip3 install git+https://github.com/raboud/ludus-cli.git
+
+    - name: Validate Ludus API Key
+      run: |
+        set -e
+        echo "LUDUS_API_KEY is set."
+      env:
+        LUDUS_API_KEY: ${{ secrets.LUDUS_API_KEY }}
+
+    - name: Deploy Ludus Range
       run: |
         export LUDUS_API_KEY=${{ secrets.LUDUS_API_KEY }}
         ludus range config set -f ludus-range-config.yml
         ludus range deploy
+
+    - name: Disconnect WireGuard
+      if: always()
+      run: sudo wg-quick down ./wg0.conf
