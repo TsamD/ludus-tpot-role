@@ -12,26 +12,16 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout repository
+    - name: Checkout Repository
       uses: actions/checkout@v3
 
     - name: Validate and Format YAML Config
       run: |
         echo "Validating YAML syntax (initial run)..."
-        echo "ludus-range-config.yml"
-
-        echo "Removing trailing whitespace..."
-        sed -i 's/[ \t]*$//' ludus-range-config.yml || true
-
-        echo "Installing latest yq for YAML reformatting..."
-        sudo wget https://github.com/mikefarah/yq/releases/download/v4.45.1/yq_linux_amd64 -O /usr/local/bin/yq
-        sudo chmod +x /usr/local/bin/yq
-
-        echo "Reformatting YAML file using yq..."
-        yq eval . ludus-range-config.yml > temp.yml && mv temp.yml ludus-range-config.yml
-
-        echo "Re-validating YAML syntax with custom configuration..."
-        echo "ludus-range-config.yml"
+        echo "config/ludus/ludus-range-config.yml"
+        wget https://github.com/mikefarah/yq/releases/download/v4.45.1/yq_linux_amd64 -O /usr/local/bin/yq
+        chmod +x /usr/local/bin/yq
+        yq eval '...' ludus-range-config.yml
 
     - name: Install WireGuard & jq
       run: |
@@ -39,29 +29,4 @@ jobs:
         sudo apt-get install -y wireguard jq
 
     - name: Write WireGuard Config
-      run: echo "$WIREGUARD_CONFIG" | base64 --decode > wg0.conf
-
-    - name: Activate WireGuard VPN
-      run: |
-        sudo wg-quick up ./wg0.conf
-
-    - name: Install Ludus CLI Non-Interactively
-      run: |
-        pip3 install git+https://github.com/raboud/ludus-cli.git
-
-    - name: Validate Ludus API Key
-      run: |
-        set -e
-        echo "LUDUS_API_KEY is set."
-      env:
-        LUDUS_API_KEY: ${{ secrets.LUDUS_API_KEY }}
-
-    - name: Deploy Ludus Range
-      run: |
-        export LUDUS_API_KEY=${{ secrets.LUDUS_API_KEY }}
-        ludus range config set -f ludus-range-config.yml
-        ludus range deploy
-
-    - name: Disconnect WireGuard
-      if: always()
-      run: sudo wg-quick down ./wg0.conf
+      run
