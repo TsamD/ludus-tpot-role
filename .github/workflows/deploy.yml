@@ -3,7 +3,8 @@ name: Deploy Range Config
 on:
   push:
     paths:
-      - 'config/ludus/ludus-range-config.yml'
+      - 'ludus-range-config.yml'
+      - 'roles/**'
   workflow_dispatch:
 
 jobs:
