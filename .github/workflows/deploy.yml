@@ -18,17 +18,9 @@ jobs:
     - name: Decode WireGuard config
       run: |
         echo "${{ secrets.WIREGUARD_CONFIG }}" | base64 -d > wg0.conf
-
-    - name: Setup WireGuard and connect to server
-      run: |
-        sudo apt update
-        sudo apt install -y wireguard
-        sudo wg-quick up ./wg0.conf
-
-    - name: Install Python and Ludus CLI
-      run: |
-        sudo apt install -y python3 python3-pip
-        pip3 install ludus-cli
+        sudo mv wg0.conf /etc/wireguard/wg0.conf
+        sudo chmod 600 /etc/wireguard/wg0.conf
+        sudo wg-quick up wg0
 
     - name: Set Ludus API key
       run: echo "LUDUS_API_KEY=${{ secrets.LUDUS_API_KEY }}" >> $GITHUB_ENV
