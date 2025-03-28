@@ -71,7 +71,7 @@ jobs:
           # Install Ludus CLI non-interactively
           script -q -c 'printf "y\ny\ny\n" | curl -s https://ludus.cloud/install | bash' /dev/null
       - name: Add Ludus CLI to PATH
-        run: echo "/usr/local/bin" >> $GITHUB_PATH
+        run: echo "$HOME/.local/bin" >> $GITHUB_PATH   
       - name: Validate Ludus API Key
         run: |
           set -e
@@ -80,6 +80,12 @@ jobs:
             exit 1
           fi
           echo "LUDUS_API_KEY is set."
+      - name: Debug Ludus CLI install path
+        run: |
+          echo "Ludus CLI installed?"
+          find $HOME -name ludus
+          echo "PATH = $PATH"
+          which ludus || echo "ludus not found"
 
       - name: Deploy Ludus Range
         run: |
