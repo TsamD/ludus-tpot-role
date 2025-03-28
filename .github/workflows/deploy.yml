@@ -17,11 +17,12 @@ jobs:
 
     - name: Validate and Format YAML Config
       run: |
-        echo "Validating YAML syntax (initial run)..."
-        echo "config/ludus/ludus-range-config.yml"
+        echo "🔍 Validating YAML syntax..."
         wget https://github.com/mikefarah/yq/releases/download/v4.45.1/yq_linux_amd64 -O /usr/local/bin/yq
         chmod +x /usr/local/bin/yq
-        yq eval '...' ludus-range-config.yml
+        test -f ludus-range-config.yml || (echo "❌ Fichier non trouvé"; exit 1)
+        yq eval '.' ludus-range-config.yml
+        echo "✅ YAML validé."
 
     - name: Install WireGuard & jq
       run: |
@@ -29,26 +30,33 @@ jobs:
         sudo apt-get install -y wireguard jq
 
     - name: Write WireGuard Config
-      run: echo "$WIREGUARD_CONFIG" | base64 --decode > wg0.conf
+      run: |
+        echo "$WIREGUARD_CONFIG" | base64 --decode > wg0.conf
+        chmod 600 wg0.conf
+        echo "✅ WireGuard config écrit."
+
       env:
         WIREGUARD_CONFIG: ${{ secrets.WIREGUARD_CONFIG }}
 
     - name: Activate WireGuard VPN
-      run: sudo wg-quick up ./wg0.conf
+      timeout-minutes: 2
+      run: |
+        sudo wg-quick up ./wg0.conf
+        echo "✅ VPN activé. Interface :"
+        sudo wg show
 
     - name: Install Ludus CLI Non-Interactively
       run: |
         set -e
         if ! command -v script >/dev/null; then
-          echo "Error: 'script' command not found. Aborting."
-          exit 1
+          echo "❌ 'script' manquant"; exit 1
         fi
         script -q -c 'printf "y\ny\ny\n" | curl -s https://ludus.cloud/install | bash' /dev/null
       env:
         LUDUS_API_KEY: ${{ secrets.LUDUS_API_KEY }}
 
     - name: Validate Ludus API Key
-      run: set -e && echo "LUDUS_API_KEY is set."
+      run: echo "✅ LUDUS_API_KEY est bien présent."
       env:
         LUDUS_API_KEY: ${{ secrets.LUDUS_API_KEY }}
 
@@ -59,4 +67,4 @@ jobs:
         ludus range deploy
 
     - name: Disconnect WireGuard
-      run: sudo wg-quick down ./wg0.conf
+      run: sudo wg-quick down ./wg0.conf || echo "❗VPN déjà désactivé."
