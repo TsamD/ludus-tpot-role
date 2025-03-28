@@ -4,43 +4,29 @@ on:
   push:
     paths:
       - 'ludus-range-config.yml'
+      - 'roles/**'
   workflow_dispatch:
 
 jobs:
-  deploy_range:
+  deploy:
     runs-on: ubuntu-latest
-    timeout-minutes: 180
 
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v3
+    - name: Checkout repository
+      uses: actions/checkout@v3
 
-      - name: Install Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: '3.11'
+    - name: Install Python and Ludus CLI
+      run: |
+        sudo apt update
+        sudo apt install -y python3 python3-pip
+        pip3 install ludus-cli
 
-      - name: Install Ansible
-        run: |
-          python -m pip install --upgrade pip
-          pip install ansible
+    - name: Set Ludus API key
+      run: echo "LUDUS_API_KEY=${{ secrets.LUDUS_API_KEY }}" >> $GITHUB_ENV
 
-      - name: Set up SSH
-        uses: webfactory/ssh-agent@v0.9.0
-        with:
-          ssh-private-key: ${{ secrets.LUDUS_DEPLOY_KEY }}
-
-      - name: Copy files to Ludus server
-        run: |
-          scp -o StrictHostKeyChecking=no ludus-range-config.yml root@192.168.3.20:/home/ludus/ludus-range-config.yml
-          scp -r -o StrictHostKeyChecking=no roles/ root@192.168.3.20:/home/ludus/roles/
-
-      - name: Deploy Ludus Range
-        run: |
-          ssh -o StrictHostKeyChecking=no root@192.168.3.20 << 'EOF'
-            export LUDUS_API_KEY="${{ secrets.LUDUS_API_KEY }}"
-            cd /home/ludus
-            ludus range config set -f ludus-range-config.yml
-            ludus range deploy
-          EOF
+    - name: Deploy range
+      run: |
+        export LUDUS_API_KEY=${{ secrets.LUDUS_API_KEY }}
+        ludus range config set -f ludus-range-config.yml
+        ludus range deploy
 
