@@ -29,4 +29,34 @@ jobs:
         sudo apt-get install -y wireguard jq
 
     - name: Write WireGuard Config
-      run
+      run: echo "$WIREGUARD_CONFIG" | base64 --decode > wg0.conf
+      env:
+        WIREGUARD_CONFIG: ${{ secrets.WIREGUARD_CONFIG }}
+
+    - name: Activate WireGuard VPN
+      run: sudo wg-quick up ./wg0.conf
+
+    - name: Install Ludus CLI Non-Interactively
+      run: |
+        set -e
+        if ! command -v script >/dev/null; then
+          echo "Error: 'script' command not found. Aborting."
+          exit 1
+        fi
+        script -q -c 'printf "y\ny\ny\n" | curl -s https://ludus.cloud/install | bash' /dev/null
+      env:
+        LUDUS_API_KEY: ${{ secrets.LUDUS_API_KEY }}
+
+    - name: Validate Ludus API Key
+      run: set -e && echo "LUDUS_API_KEY is set."
+      env:
+        LUDUS_API_KEY: ${{ secrets.LUDUS_API_KEY }}
+
+    - name: Deploy Ludus Range
+      run: |
+        export LUDUS_API_KEY=${{ secrets.LUDUS_API_KEY }}
+        ludus range config set -f ludus-range-config.yml
+        ludus range deploy
+
+    - name: Disconnect WireGuard
+      run: sudo wg-quick down ./wg0.conf
