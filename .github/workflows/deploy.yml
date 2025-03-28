@@ -15,9 +15,18 @@ jobs:
     - name: Checkout repository
       uses: actions/checkout@v3
 
-    - name: Install Python and Ludus CLI
+    - name: Decode WireGuard config
+      run: |
+        echo "${{ secrets.WIREGUARD_CONFIG }}" | base64 -d > wg0.conf
+
+    - name: Setup WireGuard and connect to server
       run: |
         sudo apt update
+        sudo apt install -y wireguard
+        sudo wg-quick up ./wg0.conf
+
+    - name: Install Python and Ludus CLI
+      run: |
         sudo apt install -y python3 python3-pip
         pip3 install ludus-cli
 
@@ -29,4 +38,3 @@ jobs:
         export LUDUS_API_KEY=${{ secrets.LUDUS_API_KEY }}
         ludus range config set -f ludus-range-config.yml
         ludus range deploy
-
