@@ -25,14 +25,12 @@ jobs:
       - name: Validate and Format YAML Config
         run: |
           echo "Validating YAML syntax (initial run)..."
-          # Run initial validation; warnings/errors are printed
           yamllint ludus-range-config.yml || true
 
           echo "Removing trailing whitespace..."
           sed -i 's/[[:space:]]*$//' ludus-range-config.yml
 
           echo "Installing latest yq for YAML reformatting..."
-          # Download the latest go-based yq binary (v4)
           wget https://github.com/mikefarah/yq/releases/download/v4.45.1/yq_linux_amd64 -O /usr/local/bin/yq
           chmod +x /usr/local/bin/yq
 
@@ -40,8 +38,6 @@ jobs:
           yq eval . -i ludus-range-config.yml
 
           echo "Re-validating YAML syntax with custom configuration..."
-          # Use a custom yamllint configuration: disable document-start and trailing-spaces;
-          # allow longer lines (max 120 characters) with warnings.
           yamllint --config-data "{extends: default, rules: {document-start: disable, trailing-spaces: disable, line-length: {max: 120, level: warning}}}" ludus-range-config.yml
 
       - name: Install WireGuard & jq
@@ -60,18 +56,13 @@ jobs:
       - name: Activate WireGuard VPN
         run: sudo wg-quick up ./wg0.conf
 
-      - name: Install Ludus CLI Non-Interactively
+      - name: Install Ludus CLI
         run: |
-          set -e
-          # Ensure 'script' command is available
-          if ! command -v script >/dev/null; then
-            echo "Error: 'script' command not found. Aborting."
-            exit 1
-          fi
-          # Install Ludus CLI non-interactively
-          script -q -c 'printf "y\ny\ny\n" | curl -s https://ludus.cloud/install | bash' /dev/null
+          curl -s https://ludus.cloud/install | bash -s -- -y
+
       - name: Add Ludus CLI to PATH
-        run: echo "$HOME/.local/bin" >> $GITHUB_PATH   
+        run: echo "$HOME/.local/bin" >> $GITHUB_PATH
+
       - name: Validate Ludus API Key
         run: |
           set -e
@@ -80,31 +71,21 @@ jobs:
             exit 1
           fi
           echo "LUDUS_API_KEY is set."
-      - name: Debug Ludus CLI install path
-        run: |
-          echo "Ludus CLI installed?"
-          find $HOME -name ludus
-          echo "PATH = $PATH"
-          which ludus || echo "ludus not found"
 
       - name: Deploy Ludus Range
         run: |
           set -e
-          # Set the configuration and initiate deployment.
           ludus range config set -f ./ludus-range-config.yml
           ludus range deploy
 
-          # Wait until the deployment is no longer in the "DEPLOYING" state.
           echo "Waiting for deployment to finish..."
           while [[ "$(ludus range status --json | jq -r '.rangeState')" == "DEPLOYING" ]]; do
             sleep 10
           done
 
-          # Capture the final state.
           FINAL_STATE=$(ludus range status --json | jq -r '.rangeState')
           echo "Final deployment state: ${FINAL_STATE}"
 
-          # Display logs and exit accordingly.
           if [[ "${FINAL_STATE}" == "SUCCESS" ]]; then
             echo "Deployment succeeded. Displaying logs:"
             ludus range logs
