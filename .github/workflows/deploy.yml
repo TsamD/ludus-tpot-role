@@ -37,7 +37,7 @@ jobs:
           echo "Reformatting YAML file using yq..."
           yq eval . -i ludus-range-config.yml
 
-          echo "Re-validating YAML syntax..."
+          echo "Re-validating YAML syntax with custom configuration..."
           yamllint --config-data "{extends: default, rules: {document-start: disable, trailing-spaces: disable, line-length: {max: 120, level: warning}}}" ludus-range-config.yml
 
       - name: Install WireGuard & jq
@@ -65,15 +65,15 @@ jobs:
           fi
           script -q -c 'printf "y\ny\ny\n" | curl -s https://ludus.cloud/install | bash' /dev/null
 
-      - name: Add Ludus CLI to PATH
-        run: echo "/usr/local/bin" >> $GITHUB_PATH
-
-      - name: Debug Ludus API Key Validity
+      - name: Debug Ludus CLI install
         run: |
-          set -e
-          echo "Testing if API key works with Ludus CLI..."
-          export LUDUS_API_KEY=${{ secrets.LUDUS_API_KEY }}
-          ludus range status --json || echo "❌ API key might be invalid or not authorized"
+          echo "Searching for 'ludus' binary..."
+          find /usr -name ludus 2>/dev/null
+          echo "Current PATH: $PATH"
+          which ludus || echo "❌ ludus NOT found in PATH"
+
+      - name: Add /usr/local/bin to PATH
+        run: echo "/usr/local/bin" >> $GITHUB_PATH
 
       - name: Validate Ludus API Key
         run: |
@@ -83,6 +83,12 @@ jobs:
             exit 1
           fi
           echo "LUDUS_API_KEY is set."
+
+      - name: Debug Ludus API Key Validity
+        run: |
+          set -e
+          echo "Testing if API key works with Ludus CLI..."
+          ludus range status --json || echo "❌ API key might be invalid or not authorized"
 
       - name: Deploy Ludus Range
         run: |
@@ -126,6 +132,6 @@ jobs:
         run: |
           git config --global user.email "action@github.com"
           git config --global user.name "GitHub Action"
-          git add config/ludus/README.md || true
+          git add config/ludus/README.md
           git commit -m "Update README.md via Python script" || echo "No changes to commit"
           git push
