@@ -18,9 +18,8 @@ jobs:
     - name: Decode WireGuard config
       run: |
         echo "${{ secrets.WIREGUARD_CONFIG }}" | base64 -d > wg0.conf
-        sudo mv wg0.conf /etc/wireguard/wg0.conf
-        sudo chmod 600 /etc/wireguard/wg0.conf
-        sudo wg-quick up wg0
+        sudo chmod 600 wg0.conf
+        sudo wg-quick up ./wg0.conf
 
     - name: Set Ludus API key
       run: echo "LUDUS_API_KEY=${{ secrets.LUDUS_API_KEY }}" >> $GITHUB_ENV
