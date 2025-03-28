@@ -70,7 +70,8 @@ jobs:
           fi
           # Install Ludus CLI non-interactively
           script -q -c 'printf "y\ny\ny\n" | curl -s https://ludus.cloud/install | bash' /dev/null
-
+      - name: Add Ludus CLI to PATH
+        run: echo "/usr/local/bin" >> $GITHUB_PATH
       - name: Validate Ludus API Key
         run: |
           set -e
