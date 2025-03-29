@@ -9,7 +9,7 @@ on:
 
 jobs:
   deploy_range:
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     timeout-minutes: 180
     permissions:
       contents: write
@@ -64,13 +64,6 @@ jobs:
             exit 1
           fi
           script -q -c 'printf "y\ny\ny\n" | curl -s https://ludus.cloud/install | bash' /dev/null
-
-      - name: Debug Ludus CLI install
-        run: |
-          echo "Searching for 'ludus' binary..."
-          find /usr -name ludus 2>/dev/null
-          echo "Current PATH: $PATH"
-          which ludus || echo "❌ ludus NOT found in PATH"
 
       - name: Add /usr/local/bin to PATH
         run: echo "/usr/local/bin" >> $GITHUB_PATH
