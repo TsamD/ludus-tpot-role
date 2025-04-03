@@ -78,6 +78,10 @@ jobs:
           fi
           echo "LUDUS_API_KEY is set."
 
+      # 🆕 Étape ajoutée ici : installation des rôles Ansible depuis GitHub
+      - name: Install Ansible Galaxy roles
+        run: ansible-galaxy install -r requirements.yml
+
       - name: Deploy Ludus Range
         run: |
           set -e
@@ -127,6 +131,5 @@ jobs:
           git add config/ludus/README.md
           git add config/ludus/ludus-range-config.yml
           git commit -m "chore: auto-update files via GitHub Action" || echo "No changes to commit"
-          # handle any remaining unstaged changes
           git pull --rebase --autostash
           git push
