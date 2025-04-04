@@ -37,10 +37,10 @@ jobs:
           yq eval . -i ludus-range-config.yml
 
           echo "Inserting blank lines between list items..."
-          awk 'NR==1 {print} NR > 1 {if ($0 ~ /^  -/) {print ""} print}' config/ludus/ludus-range-config.yml > temp.yml && mv temp.yml config/ludus/ludus-range-config.yml
+          awk 'NR==1 {print} NR > 1 {if ($0 ~ /^  -/) {print ""} print}' ludus-range-config.yml > temp.yml && mv temp.yml config/ludus/ludus-range-config.yml
 
           echo "Re-validating YAML syntax with custom configuration..."
-          yamllint --config-data "{extends: default, rules: {document-start: disable, trailing-spaces: disable, line-length: {max: 120, level: warning}}}" config/ludus/ludus-range-config.yml
+          yamllint --config-data "{extends: default, rules: {document-start: disable, trailing-spaces: disable, line-length: {max: 120, level: warning}}}" ludus-range-config.yml
 
       - name: Install WireGuard & jq
         run: |
