@@ -7,10 +7,9 @@ ludus:
     ram_gb: 8
     cpus: 4
     linux: true
-    testing:
-      snapshot: false
-      block_internet: false
-    
+    roles:
+      - yudus.ludus_tpot_server
+
   - vm_name: "{{ range_id }}-hiv"
     hostname: "{{ range_id }}-hiv"
     template: debian-12-x64-server-template
@@ -19,9 +18,5 @@ ludus:
     ram_gb: 4
     cpus: 2
     linux: true
-    testing:
-      snapshot: false
-      block_internet: false
-      
-ansible:
-  playbook: playbook.yml
+    roles:
+      - yudus.ludus_hiv_sensor
