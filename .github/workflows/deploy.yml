@@ -14,6 +14,7 @@ jobs:
       contents: write
     env:
       LUDUS_API_KEY: ${{ secrets.LUDUS_API_KEY }}
+
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
@@ -37,7 +38,7 @@ jobs:
           yq eval . -i ludus-range-config.yml
 
           echo "Inserting blank lines between list items..."
-          awk 'NR==1 {print} NR > 1 {if ($0 ~ /^  -/) {print ""} print}' ludus-range-config.yml > temp.yml && mv temp.yml config/ludus/ludus-range-config.yml
+          awk 'NR==1 {print} NR > 1 {if ($0 ~ /^  -/) {print ""} print}' ludus-range-config.yml > temp.yml && mv temp.yml ludus-range-config.yml
 
           echo "Re-validating YAML syntax with custom configuration..."
           yamllint --config-data "{extends: default, rules: {document-start: disable, trailing-spaces: disable, line-length: {max: 120, level: warning}}}" ludus-range-config.yml
@@ -61,13 +62,12 @@ jobs:
       - name: Install Ludus CLI Non-Interactively
         run: |
           set -e
-          # Ensure 'script' command is available
           if ! command -v script >/dev/null; then
             echo "Error: 'script' command not found. Aborting."
             exit 1
           fi
-          # Install Ludus CLI non-interactively
           script -q -c 'printf "y\ny\ny\n" | curl -s https://ludus.cloud/install | bash' /dev/null
+          echo "$HOME/.ludus/bin" >> $GITHUB_PATH  # 👈 permet d'utiliser la commande 'ludus' juste après
 
       - name: Validate Ludus API Key
         run: |
@@ -76,60 +76,4 @@ jobs:
             echo "Error: LUDUS_API_KEY is not set!"
             exit 1
           fi
-          echo "LUDUS_API_KEY is set."
-
-      # 🆕 Étape ajoutée ici : installation des rôles Ansible depuis GitHub
-      - name: Install Ansible Galaxy roles
-        run: ansible-galaxy install -r requirements.yml
-
-      - name: Deploy Ludus Range
-        run: |
-          set -e
-          # Set the configuration and initiate deployment.
-          ludus range config set -f ./ludus-range-config.yml
-          ludus range deploy
-
-          # Wait until the deployment is no longer in the "DEPLOYING" state.
-          echo "Waiting for deployment to finish..."
-          while [[ "$(ludus range status --json | jq -r '.rangeState')" == "DEPLOYING" ]]; do
-            sleep 10
-          done
-
-          # Capture the final state.
-          FINAL_STATE=$(ludus range status --json | jq -r '.rangeState')
-          echo "Final deployment state: ${FINAL_STATE}"
-
-          # Display logs and exit accordingly.
-          if [[ "${FINAL_STATE}" == "SUCCESS" ]]; then
-            echo "Deployment succeeded. Displaying logs:"
-            ludus range logs
-          else
-            echo "Deployment failed or ended in an unexpected state. Displaying logs:"
-            ludus range logs
-            exit 1
-          fi
-
-      - name: Disconnect WireGuard
-        if: always()
-        run: |
-          if [ -f wg0.conf ]; then
-            sudo wg-quick down ./wg0.conf
-          else
-            echo "wg0.conf not found. Skipping disconnect."
-          fi
-
-      - name: Run Python Script to update README.md range-config
-        env:
-          LUDUS_INPUT_FILE: ludus-range-config.yml
-          LUDUS_OUTPUT_FILE: README.md
-        run: python3 ludus-range-config.py
-
-      - name: Commit and push updated files
-        run: |
-          git config --global user.email "action@github.com"
-          git config --global user.name "GitHub Action"
-          git add README.md
-          git add ludus-range-config.yml
-          git commit -m "chore: auto-update files via GitHub Action" || echo "No changes to commit"
-          git pull --rebase --autostash
-          git push
+          echo "LUDUS_API_KEY
