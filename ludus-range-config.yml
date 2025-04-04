@@ -8,7 +8,8 @@ ludus:
     cpus: 4
     linux: true
     roles:
-      - yudus.ludus_tpot_server
+      - TsamD.ludus_tpot_server
+
 
   - vm_name: "{{ range_id }}-hiv"
     hostname: "{{ range_id }}-hiv"
@@ -19,4 +20,4 @@ ludus:
     cpus: 2
     linux: true
     roles:
-      - yudus.ludus_hiv_sensor
+      - TsamD.ludus_hiv_sensor
