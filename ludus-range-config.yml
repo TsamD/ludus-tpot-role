@@ -2,7 +2,7 @@ ludus:
   - vm_name: "{{ range_id }}-tpot"
     hostname: "{{ range_id }}-tpot"
     template: debian-12-x64-server-template
-    vlan: 100
+    vlan: 200
     ip_last_octet: 50
     ram_gb: 8
     cpus: 4
@@ -14,7 +14,7 @@ ludus:
   - vm_name: "{{ range_id }}-hiv"
     hostname: "{{ range_id }}-hiv"
     template: debian-12-x64-server-template
-    vlan: 100
+    vlan: 200
     ip_last_octet: 51
     ram_gb: 4
     cpus: 2
