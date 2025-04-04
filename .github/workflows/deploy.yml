@@ -3,7 +3,7 @@ name: Deploy Range Config
 on:
   push:
     paths:
-      - 'config/ludus/ludus-range-config.yml'
+      - 'ludus-range-config.yml'
   workflow_dispatch:
 
 jobs:
@@ -24,17 +24,17 @@ jobs:
       - name: Validate and Format YAML Config
         run: |
           echo "Validating YAML syntax (initial run)..."
-          yamllint config/ludus/ludus-range-config.yml || true
+          yamllint ludus-range-config.yml || true
 
           echo "Removing trailing whitespace..."
-          sed -i 's/[[:space:]]*$//' config/ludus/ludus-range-config.yml
+          sed -i 's/[[:space:]]*$//' ludus-range-config.yml
 
           echo "Installing latest yq for YAML reformatting..."
           wget https://github.com/mikefarah/yq/releases/download/v4.45.1/yq_linux_amd64 -O /usr/local/bin/yq
           chmod +x /usr/local/bin/yq
 
           echo "Reformatting YAML file using yq..."
-          yq eval . -i config/ludus/ludus-range-config.yml
+          yq eval . -i ludus-range-config.yml
 
           echo "Inserting blank lines between list items..."
           awk 'NR==1 {print} NR > 1 {if ($0 ~ /^  -/) {print ""} print}' config/ludus/ludus-range-config.yml > temp.yml && mv temp.yml config/ludus/ludus-range-config.yml
@@ -86,7 +86,7 @@ jobs:
         run: |
           set -e
           # Set the configuration and initiate deployment.
-          ludus range config set -f ./config/ludus/ludus-range-config.yml
+          ludus range config set -f ./ludus-range-config.yml
           ludus range deploy
 
           # Wait until the deployment is no longer in the "DEPLOYING" state.
@@ -120,16 +120,16 @@ jobs:
 
       - name: Run Python Script to update README.md range-config
         env:
-          LUDUS_INPUT_FILE: config/ludus/ludus-range-config.yml
-          LUDUS_OUTPUT_FILE: config/ludus/README.md
-        run: python3 config/ludus/ludus-range-config.py
+          LUDUS_INPUT_FILE: ludus-range-config.yml
+          LUDUS_OUTPUT_FILE: README.md
+        run: python3 ludus-range-config.py
 
       - name: Commit and push updated files
         run: |
           git config --global user.email "action@github.com"
           git config --global user.name "GitHub Action"
-          git add config/ludus/README.md
-          git add config/ludus/ludus-range-config.yml
+          git add README.md
+          git add ludus-range-config.yml
           git commit -m "chore: auto-update files via GitHub Action" || echo "No changes to commit"
           git pull --rebase --autostash
           git push
