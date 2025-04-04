@@ -10,9 +10,7 @@ ludus:
     testing:
       snapshot: false
       block_internet: false
-    roles:
-      - yudus.ludus_tpot_server
-
+    
   - vm_name: "{{ range_id }}-hiv"
     hostname: "{{ range_id }}-hiv"
     template: debian-12-x64-server-template
@@ -24,5 +22,6 @@ ludus:
     testing:
       snapshot: false
       block_internet: false
-    roles:
-      - yudus.ludus_hiv_sensor
+      
+ansible:
+  playbook: playbook.yml
