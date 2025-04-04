@@ -1,0 +1,15 @@
+---
+- hosts: all
+  become: true
+
+  vars_prompt:
+    - name: tpot_username
+      prompt: TPOT Web Username
+      private: false
+
+    - name: password
+      prompt: TPOT Web Password
+      private: true
+
+  roles:
+    - role: yudus.ludus_tpot_server
