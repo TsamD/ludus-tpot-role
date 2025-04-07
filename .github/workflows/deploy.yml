@@ -67,7 +67,7 @@ jobs:
             exit 1
           fi
           script -q -c 'printf "y\ny\ny\n" | curl -s https://ludus.cloud/install | bash' /dev/null
-          echo "$HOME/.ludus/bin" >> $GITHUB_PATH  # 👈 permet d'utiliser la commande 'ludus' juste après
+          echo "$HOME/.ludus/bin" >> $GITHUB_PATH
 
       - name: Validate Ludus API Key
         run: |
@@ -76,4 +76,10 @@ jobs:
             echo "Error: LUDUS_API_KEY is not set!"
             exit 1
           fi
-          echo "LUDUS_API_KEY
+          echo "LUDUS_API_KEY is set. Ludus CLI can now use it."
+
+      - name: Deploy to Ludus
+        run: |
+          ~/.ludus/bin/ludus deploy \
+            --range-config ./ludus-range-config.yml \
+            --api-key "$LUDUS_API_KEY"
