@@ -1,6 +1,6 @@
 # requirements.yml
 - name: yudus.ludus_tpot_server
-  src: git+https://github.com/TsamD/yudus.ludus_tpot_server.git
+  src: git+https://github.com/TsamD/ludus_tpot_server.git
 
 - name: yudus.ludus_hiv_sensor
-  src: git+https://github.com/TsamD/yudus.ludus_hiv_sensor.git
+  src: git+https://github.com/TsamD/ludus_hiv_sensor.git
